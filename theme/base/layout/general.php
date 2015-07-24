@@ -148,19 +148,17 @@ echo $OUTPUT->doctype() ?>
     </div>
 
 <!-- START OF FOOTER -->
-    <?php if (!empty($coursefooter)) { ?>
-        <div id="course-footer"><?php echo $coursefooter; ?></div>
-    <?php } ?>
-    <?php if ($hasfooter) { ?>
-    <div id="page-footer" class="clearfix">
-        <p class="helplink"><?php echo page_doc_link(get_string('moodledocslink')) ?></p>
+    <div id="page-footer">
+        <p class="helplink">
+        <?php //echo page_doc_link(get_string('moodledocslink')) ?>
+        </p>
+
         <?php
         echo $OUTPUT->login_info();
-        echo $OUTPUT->home_link();
-        echo $OUTPUT->standard_footer_html();
+        echo //$OUTPUT->home_link();
+        echo //$OUTPUT->standard_footer_html();
         ?>
     </div>
-    <?php } ?>
     <div class="clearfix"></div>
 </div>
 <?php echo $OUTPUT->standard_end_of_body_html() ?>
