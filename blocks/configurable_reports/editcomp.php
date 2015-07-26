@@ -58,6 +58,8 @@
 	$PAGE->set_context($context);
 	$PAGE->set_pagelayout('incourse');
 
+	$PAGE->requires->js('/blocks/configurable_reports/js/codemirror/lib/codemirror.js');
+	$PAGE->requires->css('/blocks/configurable_reports/js/codemirror/lib/codemirror.css');
     $PAGE->requires->js('/blocks/configurable_reports/js/configurable_reports.js');
 
 if(! has_capability('block/configurable_reports:managereports', $context) && ! has_capability('block/configurable_reports:manageownreports', $context))
@@ -92,7 +94,7 @@ if(! has_capability('block/configurable_reports:managereports', $context) && ! h
 		}
 		else if ($data = $editform->get_data()) {
 			$compclass->form_process_data($editform);
-			add_to_log($courseid, 'configurable_reports', 'edit', '', $report->name);
+			cr_add_to_log($courseid, 'configurable_reports', 'edit', '', $report->name);
 		}
 
 		$compclass->form_set_data($editform);
@@ -146,6 +148,11 @@ if(! has_capability('block/configurable_reports:managereports', $context) && ! h
 		$i = 0;
 
 		foreach($elements as $e){
+
+			if (empty($e)) {
+				continue;
+			}
+
 			require_once($CFG->dirroot.'/blocks/configurable_reports/components/'.$comp.'/'.$e['pluginname'].'/plugin.class.php');
 			$pluginclassname = 'plugin_'.$e['pluginname'];
 			$pluginclass = new $pluginclassname($report);

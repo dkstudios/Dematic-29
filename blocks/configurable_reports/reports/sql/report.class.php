@@ -22,7 +22,7 @@
   * @date: 2009
   */
 
-define('REPORT_CUSTOMSQL_MAX_RECORDS', 5000);
+defined('BLOCK_CONFIGURABLE_REPORTS_MAX_RECORDS') || define('BLOCK_CONFIGURABLE_REPORTS_MAX_RECORDS', 5000);
 
 class report_sql extends report_base {
 
@@ -58,41 +58,23 @@ class report_sql extends report_base {
 		return $sql;
 	}
 
-	function execute_query($sql, $limitnum = REPORT_CUSTOMSQL_MAX_RECORDS) {
-		global $remoteDB, $DB, $CFG;
+	function execute_query($sql, $limitnum = BLOCK_CONFIGURABLE_REPORTS_MAX_RECORDS /* ignored */) {
+		global $remotedb, $DB, $CFG;
 
 		$sql = preg_replace('/\bprefix_(?=\w+)/i', $CFG->prefix, $sql);
 
-        // Use a custom $DB (and not current system's $DB)
-        // todo: major security issue
-        $remoteDBhost = get_config('block_configurable_reports','dbhost');
-        if (empty($remoteDBhost)) {
-            $remoteDBhost = $CFG->dbhost;
+        $reportlimit = get_config('block_configurable_reports','reportlimit');
+        if (empty($reportlimit) or $reportlimit == '0') {
+                $reportlimit = BLOCK_CONFIGURABLE_REPORTS_MAX_RECORDS;
         }
-        $remoteDBname = get_config('block_configurable_reports','dbname');
-        if (empty($remoteDBname)) {
-            $remoteDBname = $CFG->dbname;
-        }
-        $remoteDBuser = get_config('block_configurable_reports','dbuser');
-        if (empty($remoteDBuser)) {
-            $remoteDBuser = $CFG->dbuser;
-        }
-        $remoteDBpass = get_config('block_configurable_reports','dbpass');
-        if (empty($remoteDBpass)) {
-            $remoteDBpass = $CFG->dbpass;
-        }
-
-        $db_class = get_class($DB);
-        $remoteDB = new $db_class();
-        $remoteDB->connect($remoteDBhost, $remoteDBuser, $remoteDBpass, $remoteDBname, $CFG->prefix);
 
         $starttime = microtime(true);
 
         if (preg_match('/\b(INSERT|INTO|CREATE)\b/i', $sql)) {
             // Run special (dangerous) queries directly.
-            $results = $remoteDB->execute($sql);
+            $results = $remotedb->execute($sql);
         } else {
-            $results = $remoteDB->get_recordset_sql($sql, null, 0, $limitnum);
+            $results = $remotedb->get_recordset_sql($sql, null, 0, $reportlimit);
         }
 
         // Update the execution time in the DB.

@@ -25,18 +25,18 @@
 require_once($CFG->dirroot.'/blocks/configurable_reports/plugin.class.php');
 
 class plugin_fsearchuserfield extends plugin_base{
-	
+
 	function init(){
 		$this->form = true;
 		$this->unique = true;
 		$this->fullname = get_string('fsearchuserfield','block_configurable_reports');
 		$this->reporttypes = array('users', 'sql');
 	}
-	
+
 	function summary($data){
 		return $data->field;
 	}
-	
+
 	function execute($finalelements,$data){
 		if($this->report->type == 'sql') {
 			return $this->execute_sql($finalelements, $data);
@@ -46,13 +46,14 @@ class plugin_fsearchuserfield extends plugin_base{
 
 
 	}
-	
+
 	private function execute_sql($finalelements, $data) {
 		$filter_fuserfield = optional_param('filter_fuserfield_'.$data->field,0,PARAM_RAW);
+		$filter = clean_param(base64_decode($filter_fuserfield),PARAM_CLEAN);
 
 		if($filter_fuserfield &&
 		   preg_match("/%%FILTER_USERS:([^%]+)%%/i",$finalelements, $output)){
-			$replace = ' AND '.$output[1].' LIKE '. "'%$filter_fuserfield%'";
+			$replace = ' AND '.$output[1].' LIKE '. "'%$filter%'";
 			return str_replace('%%FILTER_USERS:'.$output[1].'%%',$replace,$finalelements);
 		}
 
@@ -60,21 +61,21 @@ class plugin_fsearchuserfield extends plugin_base{
 	}
 
 	private function execute_users($finalelements, $data) {
-		global $DB, $CFG;
-		
-		$filter_fuserfield = optional_param('filter_fuserfield_'.$data->field,0,PARAM_RAW);		
+		global $remotedb, $CFG;
+
+		$filter_fuserfield = optional_param('filter_fuserfield_'.$data->field,0,PARAM_RAW);
 		if($filter_fuserfield){
 			// addslashes is done in clean param
-			$filter = $filter_fuserfield;
-			
-			if(strpos($data->field,'profile_') === 0){				
-				if($fieldid = $DB->get_field('user_info_field','id',array('shortname' => str_replace('profile_','', $data->field)))){
-				
-					list($usql, $params) = $DB->get_in_or_equal($finalelements);					
+			$filter = clean_param(base64_decode($filter_fuserfield),PARAM_CLEAN);
+
+			if(strpos($data->field,'profile_') === 0){
+				if($fieldid = $remotedb->get_field('user_info_field','id',array('shortname' => str_replace('profile_','', $data->field)))){
+
+					list($usql, $params) = $remotedb->get_in_or_equal($finalelements);
 					$sql = "fieldid = ? AND data LIKE ? AND userid $usql";
 					$params = array_merge(array($fieldid, "%$filter%"),$params);
 
-					if($infodata = $DB->get_records_select('user_info_data',$sql,$params)){
+					if($infodata = $remotedb->get_records_select('user_info_data',$sql,$params)){
 						$finalusersid = array();
 						foreach($infodata as $d){
 							$finalusersid[] = $d->userid;
@@ -82,42 +83,42 @@ class plugin_fsearchuserfield extends plugin_base{
 						return $finalusersid;
 					}
 				}
-			}			
+			}
 			else{
-				list($usql, $params) = $DB->get_in_or_equal($finalelements);
+				list($usql, $params) = $remotedb->get_in_or_equal($finalelements);
 				$sql = "$data->field LIKE ? AND id $usql";
 				$params = array_merge(array("%$filter%"),$params);
-				$elements = $DB->get_records_select('user',$sql,$params);
+				if($elements = $remotedb->get_records_select('user',$sql,$params)){
 				$finalelements = array_keys($elements);
+				}
 			}
 		}
-
-		return $finalelements;		
+		return $finalelements;
 	}
-	
+
 	function print_filter(&$mform, $data){
-		global $DB, $CFG;
-		
-		$columns = $DB->get_columns('user');
+		global $remotedb, $CFG;
+
+		$columns = $remotedb->get_columns('user');
 		$filteroptions = array();
 		$filteroptions[''] = get_string('filter_all', 'block_configurable_reports');
-		
+
 		$usercolumns = array();
 		foreach($columns as $c)
 			$usercolumns[$c->name] = $c->name;
-			
-		if($profile = $DB->get_records('user_info_field'))
+
+		if($profile = $remotedb->get_records('user_info_field'))
 			foreach($profile as $p)
-				$usercolumns['profile_'.$p->shortname] = $p->name;		
-			
+				$usercolumns['profile_'.$p->shortname] = $p->name;
+
 		if(!isset($usercolumns[$data->field]))
 			print_error('nosuchcolumn');
-			
-		$reportclassname = 'report_'.$this->report->type;	
+
+		$reportclassname = 'report_'.$this->report->type;
 		$reportclass = new $reportclassname($this->report);
 
-		if($this->report->type == 'sql'){	
-			$userlist = array_keys($DB->get_records('user'));
+		if($this->report->type == 'sql'){
+			$userlist = array_keys($remotedb->get_records('user'));
 		} else {
 			$components = cr_unserialize($this->report->components);
 			$conditions = array_key_exists('conditions', $components) ?
@@ -125,10 +126,38 @@ class plugin_fsearchuserfield extends plugin_base{
 				null;
 			$userlist = $reportclass->elements_by_conditions($conditions);
 		}
-		$selectname = get_string($data->field);
-								
-		$mform->addElement('text', 'filter_fuserfield_'.$data->field, $selectname, array('size' => 20));
-		$mform->setType('filter_courses', PARAM_INT);
-	}	
-}
+		if(!empty($userlist)){
+			if(strpos($data->field,'profile_') === 0){
+				if($field = $remotedb->get_record('user_info_field',array('shortname' => str_replace('profile_','', $data->field)))){
+					$selectname = $field->name;
 
+					list($usql, $params) = $remotedb->get_in_or_equal($userlist);
+					$sql = "SELECT DISTINCT(data) as data FROM {user_info_data} WHERE fieldid = ? AND userid $usql";
+					$params = array_merge(array($field->id),$params);
+
+					if($infodata = $remotedb->get_records_sql($sql,$params)){
+						$finalusersid = array();
+						foreach($infodata as $d){
+							$filteroptions[base64_encode($d->data)] = $d->data;
+						}
+					}
+				}
+			}
+			else{
+				$selectname = get_string($data->field);
+
+				list($usql, $params) = $remotedb->get_in_or_equal($userlist);
+				$sql = "SELECT DISTINCT(".$data->field.") as ufield FROM {user} WHERE id $usql ORDER BY ufield ASC";
+				if($rs = $remotedb->get_recordset_sql($sql, $params)){
+					foreach($rs as $u){
+						$filteroptions[base64_encode($u->ufield)] = $u->ufield;
+					}
+					$rs->close();
+				}
+			}
+		}
+
+		$mform->addElement('select', 'filter_fuserfield_'.$data->field, $selectname, $filteroptions);
+		$mform->setType('filter_fuserfield_'.$data->field, PARAM_INT);
+	}
+}

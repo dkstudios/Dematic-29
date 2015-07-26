@@ -44,7 +44,26 @@
   }
 
     function cr_add_jsdatatables($cssid){
-        global $DB, $CFG, $OUTPUT;
+        global $DB, $CFG, $OUTPUT, $PAGE;
+
+        $PAGE->requires->string_for_js('thousandssep', 'langconfig');
+        $PAGE->requires->strings_for_js(array(
+            'datatables_sortascending',
+            'datatables_sortdescending',
+            'datatables_first',
+            'datatables_last',
+            'datatables_next',
+            'datatables_previous',
+            'datatables_emptytable',
+            'datatables_info',
+            'datatables_infoempty',
+            'datatables_infofiltered',
+            'datatables_lengthmenu',
+            'datatables_loadingrecords',
+            'datatables_processing',
+            'datatables_search',
+            'datatables_zerorecords',
+        ), 'block_configurable_reports');
 
         echo html_writer::script(false, new moodle_url('/blocks/configurable_reports/js/datatables/media/js/jquery.js'));
         echo html_writer::script(false, new moodle_url('/blocks/configurable_reports/js/datatables/media/js/jquery.dataTables.min.js'));
@@ -57,6 +76,28 @@
 //                'sScrollX': '100%',
 //                'sScrollXInner': '110%',
 //                'bScrollCollapse': true
+                'oLanguage': {
+                    'oAria': {
+                        'sSortAscending': M.str.block_configurable_reports.datatables_sortascending,
+                        'sSortDescending': M.str.block_configurable_reports.datatables_sortdescending,
+                    },
+                    'oPaginate': {
+                        'sFirst': M.str.block_configurable_reports.datatables_first,
+                        'sLast': M.str.block_configurable_reports.datatables_last,
+                        'sNext': M.str.block_configurable_reports.datatables_next,
+                        'sPrevious': M.str.block_configurable_reports.datatables_previous
+                    },
+                    'sEmptyTable': M.str.block_configurable_reports.datatables_emptytable,
+                    'sInfo': M.str.block_configurable_reports.datatables_info,
+                    'sInfoEmpty': M.str.block_configurable_reports.datatables_infoempty,
+                    'sInfoFiltered': M.str.block_configurable_reports.datatables_infofiltered,
+                    'sInfoThousands': M.str.langconfig.thousandssep,
+                    'sLengthMenu': M.str.block_configurable_reports.datatables_lengthmenu,
+                    'sLoadingRecords': M.str.block_configurable_reports.datatables_loadingrecords,
+                    'sProcessing': M.str.block_configurable_reports.datatables_processing,
+                    'sSearch': M.str.block_configurable_reports.datatables_search,
+                    'sZeroRecords': M.str.block_configurable_reports.datatables_zerorecords
+                }
             });
             new FixedHeader( oTable );
         } );";
@@ -451,7 +492,7 @@ function cr_get_context($context, $id = null, $flags = null) {
     return get_context_instance($context, $id, $flags);
 }
 
-function cr_cr_make_categories_list(&$list, &$parents, $requiredcapability = '',
+function cr_make_categories_list(&$list, &$parents, $requiredcapability = '',
         $excludeid = 0, $category = NULL, $path = "") {
     global $CFG, $DB;
     require_once($CFG->libdir.'/coursecatlib.php');
@@ -508,4 +549,59 @@ function cr_import_xml($xml, $course) {
         return true;
     }
     return false;
+}
+
+// For avoid warnings in versions minor than 2.7
+function cr_add_to_log($courseid, $module, $action, $url='', $info='', $cm=0, $user=0) {
+    global $CFG;
+
+    if ($CFG->version < 2014051200) {
+        add_to_log($courseid, $module, $action, $url, $info, $cm, $user);
+    }
+}
+
+function cr_logging_info() {
+    global $DB, $CFG;
+
+    static $uselegacyreader;
+    static $useinternalreader;
+    static $logtable;
+
+    if (isset($uselegacyreader) && isset($useinternalreader) && isset($logtable)) {
+        return array($uselegacyreader, $useinternalreader, $logtable);
+    }
+
+    $uselegacyreader = false; // Flag to determine if we should use the legacy reader.
+    $useinternalreader = false; // Flag to determine if we should use the internal reader.
+    $logtable = '';
+
+    // Pre 2.7.
+    if ($CFG->version < 2014051200) {
+        $uselegacyreader = true;
+        $logtable = 'log';
+    } else {
+
+        // Get list of readers.
+        $logmanager = get_log_manager();
+        $readers = $logmanager->get_readers();
+
+        // Get preferred reader.
+        if (!empty($readers)) {
+            foreach ($readers as $readerpluginname => $reader) {
+                // If legacy reader is preferred reader.
+                if ($readerpluginname == 'logstore_legacy') {
+                    $uselegacyreader = true;
+                    $logtable = 'log';
+                }
+
+                // If sql_internal_table_reader is preferred reader.
+                if ($reader instanceof \core\log\sql_internal_table_reader or $reader instanceof \core\log\sql_internal_reader) {
+                    $useinternalreader = true;
+                    $logtable = $reader->get_internal_log_table_name();
+                }
+            }
+        }
+    }
+
+    return array($uselegacyreader, $useinternalreader, $logtable);
 }

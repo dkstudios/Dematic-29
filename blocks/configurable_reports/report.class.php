@@ -33,10 +33,10 @@
 	var $currentcourse = 0;
 	var $starttime = 0;
 	var $endtime = 0;
-    var $sql = '';
+        var $sql = '';
 
 	function reports_base($report){
-		global $DB, $CFG, $USER;
+		global $DB, $CFG, $USER, $remotedb;
 
 		if(is_numeric($report))
 			$this->config = $DB->get_record('block_configurable_reports',array('id' => $report));
@@ -46,6 +46,22 @@
 		$this->currentuser = $USER;
 		$this->currentcourseid = $this->config->courseid;
 		$this->init();
+
+		// Use a custom $DB (and not current system's $DB)
+        // TODO: major security issue.
+        $remotedbhost = get_config('block_configurable_reports', 'dbhost');
+        $remotedbname = get_config('block_configurable_reports', 'dbname');
+        $remotedbuser = get_config('block_configurable_reports', 'dbuser');
+        $remotedbpass = get_config('block_configurable_reports', 'dbpass');
+
+        if (!empty($remotedbhost) and !empty($remotedbname) and !empty($remotedbuser) and !empty($remotedbpass) and $this->config->remote) {
+            $db_class = get_class($DB);
+            $remotedb = new $db_class();
+            $remotedb->connect($remotedbhost, $remotedbuser, $remotedbpass, $remotedbname, $CFG->prefix);
+        } else {
+            $remotedb = $DB;
+        }
+
 	}
 
 	function __construct($report) {
@@ -421,6 +437,9 @@
 			foreach($rows as $r){
 				$tempcols = array();
 				foreach($columns as $c){
+					if (empty($c)) {
+						continue;
+					}
 					require_once($CFG->dirroot.'/blocks/configurable_reports/components/columns/'.$c['pluginname'].'/plugin.class.php');
 					$classname = 'plugin_'.$c['pluginname'];
 					if(!isset($pluginscache[$classname])){
@@ -656,7 +675,7 @@
 
         // Debug
         $debug = optional_param('debug', false, PARAM_BOOL);
-        if ($debug OR $CFG->debugdisplay OR $this->config->debug) {
+        if ($debug or !empty($this->config->debug)) {
             echo html_writer::empty_tag('hr');
             echo html_writer::tag('div', $this->sql, array('id'=>'debug', 'style'=>'direction:ltr;text-align:left;'));
             echo html_writer::empty_tag('hr');

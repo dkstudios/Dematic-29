@@ -116,7 +116,9 @@ class block_configurable_reports extends block_list {
                         $this->content->items[] = '<a href= "'.$CFG->wwwroot.'/blocks/configurable_reports/viewreport.php?id='.$report->id.'&courseid='.$course->id.'" alt="'.$rname.'">'.$rname.'</a>';
                     }
                 }
-                $this->content->items[] = '========';
+                if (!empty($this->content->items)) {
+                    $this->content->items[] = '========';
+                }
             }
         }
 
@@ -133,7 +135,9 @@ class block_configurable_reports extends block_list {
                         $this->content->items[] = '<a href= "'.$CFG->wwwroot.'/blocks/configurable_reports/viewreport.php?id='.$report->id.'&courseid='.$course->id.'" alt="'.$rname.'">'.$rname.'</a>';
                     }
                 }
-                $this->content->items[] = '========';
+                if (!empty($this->content->items)) {
+                    $this->content->items[] = '========';
+                }
             }
         }
 
@@ -181,7 +185,7 @@ class block_configurable_reports extends block_list {
                 if ($report->type == 'sql' AND (!empty($report->cron) AND $report->cron == '1')) {
                     $reportclass = new report_sql($report);
 
-                    // Execute it using $remoteDB.
+                    // Execute it using $remotedb.
                     $starttime = microtime(true);
                     mtrace("\nExecuting query '$report->name'");
 

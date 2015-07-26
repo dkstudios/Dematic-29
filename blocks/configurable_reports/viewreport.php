@@ -63,7 +63,7 @@
 	}
 
 	$PAGE->set_context($context);
-	$PAGE->set_pagelayout('report');
+	$PAGE->set_pagelayout('incourse');
 	$PAGE->set_url('/blocks/configurable_reports/viewreport.php', array('id'=>$id));
 
 	$reportclass->create_report();
@@ -71,7 +71,7 @@
 	$download = ($download && $format && strpos($report->export,$format.',') !== false)? true : false;
 
 	$action = ($download)? 'download' : 'view';
-	add_to_log($report->courseid, 'configurable_reports', $action, '/block/configurable_reports/viewreport.php?id='.$id, $report->name);
+	cr_add_to_log($report->courseid, 'configurable_reports', $action, '/block/configurable_reports/viewreport.php?id='.$id, $report->name);
 
 	// No download, build navigation header etc..
 	if (!$download) {

@@ -26,10 +26,13 @@ $string['column'] = "Column";
 $string['confirmdeletereport'] = "Are you sure you want to delete this report?";
 $string['noreportsavailable'] = "No reports available";
 $string['downloadreport'] = "Download report";
+$string['reportlimit'] = "Report row limit";
+$string['reportlimitinfo'] = "Limit the number of rows that are displayed in the report table (Default is 5000 rows. Better to have some limit, so users will not over load the DB engine)";
 
 $string['configurable_reports:addinstance'] = 'Add a new configurable reports block';
+$string['configurable_reports:myaddinstance'] = 'Add a new configurable reports block to MY HOME page';
 $string['configurable_reports:manageownreports'] = "Manage own reports";
-$string['configurable_reports:managereports'] = "Mange reports";
+$string['configurable_reports:managereports'] = "Manage reports";
 $string['configurable_reports:managesqlreports'] = "Manage SQL reports";
 $string['configurable_reports:viewreports'] = "View reports";
 
@@ -49,6 +52,9 @@ $string['jsordering'] = 'JavaScript Ordering';
 $string['cron'] = 'Auto run daily';
 $string['crondescription'] = 'Schedule this query to run each day (At night)';
 $string['cron_help'] = 'Schedule this query to run each day (At night)';
+$string['remote'] = 'Run on remote db';
+$string['remotedescription'] = 'Do you want to run this query on the remote db';
+$string['remote_help'] = 'Do you want to run this query on the remote db';
 $string['setcourseid'] = 'Set courseid';
 
 // Columns
@@ -151,6 +157,18 @@ $string['pieareaname'] = "Name";
 $string['pieareavalue'] = "Value";
 $string['piesummary'] = "A pie graph";
 
+$string['bar'] = "Bar";
+$string['barsummary'] = "A bar graph";
+$string['label_field'] = "Label field";
+$string['label_field_help'] = "The field that provides names for the things represented in the graph";
+$string['value_fields'] = "Value fields";
+$string['value_fields_help'] = "Fields that should be represented in the graph. Ctrl+click (Cmd+click on Mac) to select multiple. If you select the Label field or a field with non-numeric values it will be ignored";
+$string['width'] = "Width";
+$string['height'] = "Height";
+$string['head_data'] = "Graph data";
+$string['head_size'] = "Graph size";
+$string['head_color'] = "Graph background color";
+
 $string['anyone'] = "Anyone";
 $string['anyone_summary'] = "Any user in the Campus will be able to view this report";
 
@@ -177,6 +195,7 @@ $string['usersincoursereport'] = "Any user in the current report course";
 
 $string['groupvalues'] = "Group same values (sum)";
 $string['fuserfield'] = "User field filter";
+$string['fsearchuserfield'] = "User field search box";
 
 $string['module'] = "Module";
 
@@ -413,14 +432,14 @@ $string['email_message'] = 'Message';
 $string['email_send'] = 'Send';
 
 $string['sqlsecurity'] = 'SQL Security';
-$string['sqlsecurityinfo'] = 'Disable for executing SQL queries with statements for inserting data (GitHub account owner + slash + repository name)';
+$string['sqlsecurityinfo'] = 'Disable for executing SQL queries with statements for inserting data';
 
 $string['global'] = 'Global report';
 $string['enableglobal'] = 'This is a global report (accesible from any course)';
 $string['global_help'] = 'Global report can be accessed from any course in the platform just appending &courseid=MY_COURSE_ID in the report URL';
 
 $string['crrepository'] = 'Reports repository';
-$string['crrepositoryinfo'] = 'Remote shared repository with sample reports fully functional';
+$string['crrepositoryinfo'] = 'Remote shared repository with sample reports fully functional (Name of GitHub account owner + slash + repository name)';
 $string['importfromrepository'] = 'Import report from repository';
 $string['repository'] = 'Reports repository';
 $string['repository_help'] = 'You can import sample reports from a public shared repository.
@@ -438,3 +457,22 @@ $string['displayreportslist'] = 'Display the reports list in the block body';
 $string['usercompletion'] = 'User course completion status';
 $string['usercompletionsummary'] = 'Course completion status';
 
+$string['finalgradeincurrentcourse'] = 'Final grade in current course';
+$string['legacylognotenabled'] = 'Legacy logs must be enabled.
+ Go to Site administration / Plugins / Logging Enable the Legacy log and inside the log settings check Log legacy data';
+
+$string['datatables_sortascending'] = ': activate to sort column ascending';
+$string['datatables_sortdescending'] = ': activate to sort column descending';
+$string['datatables_first'] = 'First';
+$string['datatables_last'] = 'Last';
+$string['datatables_next'] = 'Next';
+$string['datatables_previous'] = 'Previous';
+$string['datatables_emptytable'] = 'No data available in table';
+$string['datatables_info'] = 'Showing _START_ to _END_ of _TOTAL_ entries';
+$string['datatables_infoempty'] = 'Showing 0 to 0 of 0 entries';
+$string['datatables_infofiltered'] = '(filtered from _MAX_ total entries)';
+$string['datatables_lengthmenu'] = 'Show _MENU_ entries';
+$string['datatables_loadingrecords'] = 'Loading...';
+$string['datatables_processing'] = 'Processing...';
+$string['datatables_search'] = 'Search:';
+$string['datatables_zerorecords'] = 'No matching records found';
